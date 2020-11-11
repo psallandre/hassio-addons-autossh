@@ -3,6 +3,7 @@ set -e
 
 CONFIG_PATH=/data/options.json
 KEY_PATH=/data/ssh_keys
+KEY_NAME='autossh_rsa_key'
 
 HOSTNAME=$(jq --raw-output ".hostname" $CONFIG_PATH)
 SSH_PORT=$(jq --raw-output ".ssh_port" $CONFIG_PATH)
@@ -14,6 +15,8 @@ LOCAL_FORWARDING=$(jq --raw-output ".local_forwarding[]" $CONFIG_PATH)
 OTHER_SSH_OPTIONS=$(jq --raw-output ".other_ssh_options" $CONFIG_PATH)
 MONITOR_PORT=$(jq --raw-output ".monitor_port" $CONFIG_PATH)
 GATETIME=$(jq --raw-output ".gatetime" $CONFIG_PATH)
+INIT_LOCAL_COMMAND=$(jq --raw-output ".init_local_command" $CONFIG_PATH)
+INIT_REMOTE_COMMAND=$(jq --raw-output ".init_remote_command" $CONFIG_PATH)
 
 export AUTOSSH_GATETIME=$GATETIME
 
@@ -21,30 +24,27 @@ export AUTOSSH_GATETIME=$GATETIME
 if [ ! -d "$KEY_PATH" ]; then
     echo "[INFO] Setup private key"
     mkdir -p "$KEY_PATH"
-    ssh-keygen -b 4096 -t rsa -N "" -f "${KEY_PATH}/autossh_rsa_key"
+    ssh-keygen -b 4096 -t rsa -N "" -f "${KEY_PATH}/${KEY_NAME}"
 else
     echo "[INFO] Restore private_keys"
 fi
 
 echo "[INFO] public key is:"
-cat "${KEY_PATH}/autossh_rsa_key.pub"
+cat "${KEY_PATH}/${KEY_NAME}.pub"
 
-command_args="-M ${MONITOR_PORT} -N -q -o ServerAliveInterval=20 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes ${USERNAME}@${HOSTNAME} -p ${SSH_PORT} -i ${KEY_PATH}/autossh_rsa_key"
+command_args="-M ${MONITOR_PORT} -N -q -o ServerAliveInterval=20 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes ${USERNAME}@${HOSTNAME} -p ${SSH_PORT} -i ${KEY_PATH}/${KEY_NAME}"
 
-if [ ! -z "$REMOTE_FORWARDING" ]; then
+if [ -n "$REMOTE_FORWARDING" ]; then
   while read -r line; do
     command_args="${command_args} -R $line"
   done <<< "$REMOTE_FORWARDING"
 fi
 
-if [ ! -z "$LOCAL_FORWARDING" ]; then
+if [ -n "$LOCAL_FORWARDING" ]; then
   while read -r line; do
     command_args="${command_args} -L $line"
   done <<< "$LOCAL_FORWARDING"
 fi
-
-echo "[INFO] testing ssh connection"
-ssh -o StrictHostKeyChecking=no -p $SSH_PORT $HOSTNAME 2>/dev/null || true
 
 echo "[INFO] listing host keys"
 ssh-keyscan -p $SSH_PORT $HOSTNAME || true
@@ -53,6 +53,13 @@ command_args="${command_args} ${OTHER_SSH_OPTIONS}"
 
 echo "[INFO] AUTOSSH_GATETIME=$AUTOSSH_GATETIME"
 echo "[INFO] command args: ${command_args}"
+
+if [ -n "${INIT_LOCAL_COMMAND}" ] || [ -n "${INIT_REMOTE_COMMAND}" ] ; then
+  echo "[INFO] creating ssh wrapper for init local command '${INIT_LOCAL_COMMAND}' and init remote command '${INIT_REMOTE_COMMAND}'"
+  echo -e "#!/bin/bash\n${INIT_LOCAL_COMMAND}\nssh ${OTHER_SSH_OPTIONS} ${USERNAME}@${HOSTNAME} -p ${SSH_PORT} -i ${KEY_PATH}/${KEY_NAME} ${INIT_REMOTE_COMMAND}\nssh \$@" > /data/ssh_wrapper.sh
+  chmod +x /data/ssh_wrapper.sh
+  export AUTOSSH_PATH="/data/ssh_wrapper.sh"
+fi
 
 # Start autossh
 until /usr/bin/autossh ${command_args}
