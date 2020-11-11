@@ -8,7 +8,7 @@
   "startup": "application",
   "boot": "auto",
   "host_network": true,
-  "map": ["config:rw"],
+  "map": ["config:rw", "share:rw"],
   "options": {
     "hostname": "",
     "ssh_port": "22",
