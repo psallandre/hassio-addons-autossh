@@ -27,8 +27,9 @@ export AUTOSSH_GATETIME=$GATETIME
 KEY_PATH="/data/.ssh"
 
 if bashio::config.true "share"; then
-  mkdir -p "/data/share/.ssh"
+  mkdir -p "/data/share/"
   mount --bind "/share" "/data/share"
+  mkdir -p "/share/.ssh"
   KEY_PATH="/share/.ssh"
 fi
 

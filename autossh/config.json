@@ -1,6 +1,6 @@
 {
   "name": "Autossh",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "slug": "autossh",
   "description": "Automatically connect to a ssh server for forwarding ports",
   "url": "https://github.com/psallandre/hassio-addons-autossh",
@@ -9,7 +9,9 @@
   "boot": "auto",
   "host_network": true,
   "privileged": ["SYS_ADMIN"],
+  "apparmor": false,
   "map": ["share:rw"],
+  "image": "psallandre/hassio-autossh-{arch}",
   "options": {
     "hostname": "",
     "ssh_port": 22,
