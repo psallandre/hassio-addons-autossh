@@ -10,6 +10,7 @@ ENV LANG C.UTF-8
 
 RUN apk add --no-cache \
     autossh \
+    moreutils \
     nano
 
 COPY run.sh /

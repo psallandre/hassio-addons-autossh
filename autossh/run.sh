@@ -85,7 +85,7 @@ if [ -n "${INIT_LOCAL_COMMAND}" ] || [ -n "${INIT_REMOTE_COMMAND}" ] ; then
 fi
 
 # Start autossh
-until /usr/bin/autossh ${command_args}
+until /usr/bin/autossh ${command_args} 2>&1 | ts '[%Y-%m-%d %H:%M:%S]'
 do
   bashio::log.error "Failed, retrying in ${RETRY_INTERVAL}s"
   sleep ${RETRY_INTERVAL}
