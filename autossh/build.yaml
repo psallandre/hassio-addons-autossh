@@ -1,0 +1,7 @@
+---
+build_from:
+  aarch64: ghcr.io/psallandre/hassio-base-aarch64:16.3.6-sd
+  amd64: ghcr.io/psallandre/hassio-base-amd64:16.3.6-sd
+  armv7: ghcr.io/psallandre/hassio-base-armv7:16.3.6-sd
+args:
+  BUILD_REPOSITORY: "psallandre/hassio-addons-autossh"
