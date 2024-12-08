@@ -15,7 +15,7 @@ privileged:
 apparmor: false
 map:
   - share:rw
-image: psallandre/hassio-autossh-{arch}
+image: ghcr.io/psallandre/hassio-autossh-{arch}
 options:
   log_level: info
   hostname: ""
