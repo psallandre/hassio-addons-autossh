@@ -3,6 +3,7 @@ version: 0.8.0
 slug: autossh
 description: Automatically connect to a ssh server for forwarding ports
 url: https://github.com/psallandre/hassio-addons-autossh
+init: false
 arch:
   - armv7
   - amd64
